@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Application</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #overlay {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 2;
+    }
+    #usernameForm {
+      background-color: white;
+      color: black;
+      padding: 20px;
+      border-radius: 5px;
+    }
+    #messages {
+      display: none;
+      max-width: 80%;
+      list-style-type: none;
+      padding: 0;
+    }
+    #form {
+      display: none;
+      width: 80%;
+      max-width: 400px;
+      display: flex;
+    }
+    #input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px 0 0 5px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 0 5px 5px 0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <div id="usernameForm">
+      <h1>Welcome</h1>
+      <p>Please enter your username:</p>
+      <input id="username" placeholder="Enter your username" autocomplete="off" />
+      <button id="submitUsername">Submit</button>
+    </div>
+  </div>
+
+  <ul id="messages"></ul>
+  <form id="form" action="">
+    <input id="input" placeholder="Enter your message" autocomplete="off" />
+    <button>Send</button>
+  </form>
+
+  <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const messages = document.getElementById('messages');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+
+    const overlay = document.getElementById('overlay');
+    const usernameForm = document.getElementById('usernameForm');
+    const usernameInput = document.getElementById('username');
+    const submitUsernameBtn = document.getElementById('submitUsername');
+
+    const formatTime = (time) => {
+      const date = new Date(time);
+      return `${date.getHours()}:${date.getMinutes()}`;
+    };
+
+    submitUsernameBtn.addEventListener('click', () => {
+      const username = usernameInput.value.trim();
+      if (username !== '') {
+        socket.emit('setUsername', username);
+        overlay.style.display = 'none';
+        messages.style.display = 'block';
+        form.style.display = 'flex';
+      }
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const message = input.value;
+      if (message) {
+        socket.emit('chat message', { username, message });
+        input.value = '';
+      }
+    });
+
+    socket.on('chat message', (data) => {
+      const item = document.createElement('li');
+      const time = new Date().getTime();
+      item.textContent = `[${formatTime(time)}] ${data.username}: ${data.message}`;
+      messages.appendChild(item);
+    });
+  </script>
+</body>
+</html>
